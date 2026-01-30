@@ -363,4 +363,4 @@ class OwnerOnlyLoginView(LoginView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        return self.snippet.get_absolute_url()
+        return self.snippet.get_absolute_url() # type: ignore

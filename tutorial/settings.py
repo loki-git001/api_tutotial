@@ -11,21 +11,27 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+load_dotenv(BASE_DIR / ".env")
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-qu03w+a@m(*160txv__cdv1h_*jsgr69f1xa_qg1i%^$74t(5t"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY","django-insecure-local-only")
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [".elasticbeanstalk.com", "localhost", "127.0.0.1"]
 
 
 # Application definition
@@ -77,12 +83,25 @@ WSGI_APPLICATION = "tutorial.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+
+if "RDS_DB_NAME" in os.environ:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ["RDS_DB_NAME"],
+            "USER": os.environ["RDS_USERNAME"],
+            "PASSWORD": os.environ["RDS_PASSWORD"],
+            "HOST": os.environ["RDS_HOSTNAME"],
+            "PORT": os.environ["RDS_PORT"],
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 
 # Password validation
@@ -109,7 +128,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Kolkata"
 
 USE_I18N = True
 
@@ -120,6 +139,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
 
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
@@ -141,3 +162,26 @@ SWAGGER_SETTINGS = {
 }
 
 LOGIN_REDIRECT_URL = "/snippets/"
+
+
+if os.environ.get("DJANGO_ENV") == "production":
+    DEBUG = False
+
+
+    # Security: HTTPS & Cookies
+    # SECURE_SSL_REDIRECT = True  <-- DISABLED for now (needs SSL cert)
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False # DISABLED for HTTP
+    CSRF_COOKIE_SECURE = False    # DISABLED for HTTP
+
+    # Required for Django 4.0+ to trust the Elastic Beanstalk domain
+    CSRF_TRUSTED_ORIGINS = ["http://*.elasticbeanstalk.com", "https://*.elasticbeanstalk.com"]
+
+    # Security: HSTS (HTTP Strict Transport Security)
+    # SECURE_HSTS_SECONDS = 31536000  <-- DISABLED for now
+    # SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    # SECURE_HSTS_PRELOAD = True
+
+    # Security: Trust the Load Balancer's SSL
+    # Required for Elastic Beanstalk because the LB handles SSL, not Django directly
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
