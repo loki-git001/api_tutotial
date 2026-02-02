@@ -25,7 +25,7 @@ load_dotenv(BASE_DIR / ".env")
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY","django-insecure-local-only")
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-local-only")
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "snippets",
     "rest_framework",
+    "rest_framework.authtoken",
     "django_filters",
     # "django.contrib.staticfiles",  # required for serving swagger ui's css/js files
     "drf_yasg",
@@ -146,19 +147,17 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+    ],
 }
 
 SWAGGER_SETTINGS = {
-   'SECURITY_DEFINITIONS': {
-      'Basic': {
-            'type': 'basic'
-      },
-      'Bearer': {
-            'type': 'apiKey',
-            'name': 'Authorization',
-            'in': 'header'
-      }
-   }
+    "SECURITY_DEFINITIONS": {
+        "Basic": {"type": "basic"},
+        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"},
+    }
 }
 
 LOGIN_REDIRECT_URL = "/snippets/"
@@ -167,15 +166,17 @@ LOGIN_REDIRECT_URL = "/snippets/"
 if os.environ.get("DJANGO_ENV") == "production":
     DEBUG = False
 
-
     # Security: HTTPS & Cookies
     # SECURE_SSL_REDIRECT = True  <-- DISABLED for now (needs SSL cert)
     SECURE_SSL_REDIRECT = False
-    SESSION_COOKIE_SECURE = False # DISABLED for HTTP
-    CSRF_COOKIE_SECURE = False    # DISABLED for HTTP
+    SESSION_COOKIE_SECURE = False  # DISABLED for HTTP
+    CSRF_COOKIE_SECURE = False  # DISABLED for HTTP
 
     # Required for Django 4.0+ to trust the Elastic Beanstalk domain
-    CSRF_TRUSTED_ORIGINS = ["http://*.elasticbeanstalk.com", "https://*.elasticbeanstalk.com"]
+    CSRF_TRUSTED_ORIGINS = [
+        "http://*.elasticbeanstalk.com",
+        "https://*.elasticbeanstalk.com",
+    ]
 
     # Security: HSTS (HTTP Strict Transport Security)
     # SECURE_HSTS_SECONDS = 31536000  <-- DISABLED for now

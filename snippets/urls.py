@@ -27,9 +27,4 @@ router.register(r"users", views.UserViewSet, basename="user")
 
 urlpatterns = [
     path("", include(router.urls)),
-    path(
-        "snippets/<int:pk>/login/",
-        views.OwnerOnlyLoginView.as_view(),
-        name="snippet-owner-login",
-    ),
 ]

@@ -36,20 +36,6 @@ class SnippetSerializer(serializers.HyperlinkedModelSerializer):
         view_name="snippet-highlight", format="html"
     )
 
-    owner_login = serializers.SerializerMethodField()
-
-    def get_owner_login(self, obj):
-        request = self.context.get("request")
-        if not request:
-            return None
-        return reverse("snippet-owner-login", kwargs={"pk": obj.pk}, request=request)
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        request = self.context.get("request")
-        if request and request.user.is_authenticated:
-            data.pop("owner_login", None)
-        return data
 
     class Meta:
         model = Snippet
@@ -63,7 +49,6 @@ class SnippetSerializer(serializers.HyperlinkedModelSerializer):
             "style",
             "owner",
             "highlight",
-            "owner_login",
         ]
         extra_kwargs = {
             "url": {"help_text": "Link to the snippet detail view."},
@@ -74,7 +59,6 @@ class SnippetSerializer(serializers.HyperlinkedModelSerializer):
             "style": {"help_text": "Syntax highlighting style."},
             "owner": {"help_text": "Username of the snippet owner (readonly)."},
             "highlight": {"help_text": "Link to the highlighted HTML representation."},
-            "owner_login": {"help_text": "Link to login as owner (if not logged in)."},
         }
 
 

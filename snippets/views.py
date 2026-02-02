@@ -331,36 +331,3 @@ class SnippetViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-
-from django.contrib.auth.views import LoginView
-from django.shortcuts import get_object_or_404, redirect
-from django.views.decorators.cache import never_cache
-
-class OwnerOnlyLoginView(LoginView):
-
-    template_name = "rest_framework/login.html"
-    redirect_authenticated_user = False
-
-    @method_decorator(never_cache)
-    def dispatch(self, request, *args, **kwargs):
-        self.snippet = get_object_or_404(Snippet, pk=kwargs["pk"])
-
-        # Already logged in → redirect, do NOT logout
-        if request.user.is_authenticated:
-            if request.user != self.snippet.owner:
-                return HttpResponse(status=status.HTTP_403_FORBIDDEN)
-            return redirect(self.get_success_url())
-
-        return super().dispatch(request, *args, **kwargs)
-
-    def form_valid(self, form):
-        user = form.get_user()
-
-        # Ownership check BEFORE login
-        if user != self.snippet.owner:
-            return HttpResponse(status=status.HTTP_403_FORBIDDEN)
-
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        return self.snippet.get_absolute_url() # type: ignore
