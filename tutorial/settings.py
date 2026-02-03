@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 import os
+import socket
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -32,6 +33,13 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-local-only")
 DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = [".elasticbeanstalk.com", "localhost", "127.0.0.1"]
+
+try:
+    hostname = socket.gethostname()
+    local_ip = socket.gethostbyname(hostname)
+    ALLOWED_HOSTS.append(local_ip)
+except socket.error:
+    pass
 
 
 # Application definition
